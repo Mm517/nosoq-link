@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تسجيل الدخول | مجتمع الفايب كودينج</title><meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#0A1730">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="plat.css"></head>
+<body class="plt"><div class="au">
+ <section class="au-b">
+  <a class="logo" href="login"><span class="logo-mark"></span><span>مجتمع الفايب كودينج</span></a>
+  <h1>ابنِ مواقع كاملة <b>بالذكاء الاصطناعي</b> وتعلّم مع مجتمع بيتعلّم معاك</h1>
+  <p>كورسات خطوة بخطوة، لايفات مباشرة، أسئلة بتتجاوب عليها، وشات للأعضاء بس.</p>
+  <div class="au-f">
+   <div><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5zM4 20.5A2.5 2.5 0 006.5 18"/></svg>دروس فيديو مع ملاحظات وتتبّع تقدّمك</div>
+   <div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 000 11.4M17.7 6.3a8 8 0 010 11.4"/></svg>لايفات مباشرة وتسجيلها بعد ما تخلص</div>
+   <div><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 115 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg>اسأل واتجاوب عليك من المدرّس والأعضاء</div>
+  </div>
+ </section>
+ <section class="au-p"><div class="au-c" id="card">
+  <div class="vc-tabs" role="tablist"><button id="tS" class="on" role="tab">إنشاء حساب</button><button id="tL" role="tab">تسجيل دخول</button></div>
+  <div id="vS"><h2>انضم للمجتمع</h2><p class="muted" style="font-size:14px">حساب واحد بإيميلك وكلمة سر، وتدخل كل حاجة.</p>
+   <form id="fS" novalidate>
+    <div class="vc-f"><label for="sn">الاسم</label><input id="sn" autocomplete="name" maxlength="40" placeholder="اسمك"></div>
+    <div class="vc-f"><label for="se">الإيميل</label><input id="se" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com"></div>
+    <div class="vc-f"><label for="sp">كلمة السر</label><div class="vc-pw"><input id="sp" type="password" autocomplete="new-password" placeholder="8 أحرف على الأقل"><button type="button" class="vc-eye" data-eye="sp" aria-label="إظهار كلمة السر"></button></div></div>
+    <div id="cfs"></div><div class="vc-er" id="eS" role="alert"></div>
+    <button class="btn btn-p" id="bS" type="submit">إنشاء الحساب</button></form></div>
+  <div id="vL" hidden><h2>أهلًا بعودتك</h2><p class="muted" style="font-size:14px">سجّل دخولك وكمّل من مكان ما وقفت.</p>
+   <form id="fL" novalidate>
+    <div class="vc-f"><label for="le">الإيميل</label><input id="le" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com"></div>
+    <div class="vc-f"><label for="lp">كلمة السر</label><div class="vc-pw"><input id="lp" type="password" autocomplete="current-password"><button type="button" class="vc-eye" data-eye="lp" aria-label="إظهار كلمة السر"></button></div></div>
+    <div id="cfl"></div><div class="vc-er" id="eL" role="alert"></div>
+    <button class="btn btn-p" id="bL" type="submit">دخول</button></form></div>
+  <div class="vc-ok" id="ok" hidden></div><p class="vc-sw" id="sw"></p>
+  <a class="au-bk" id="bk" href="#">← تعرّف على الكورس</a>
+ </div></section>
+</div>
+<script src="config.js"></script><script src="vibe.js"></script>
+<script>
+const EYE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+ EYEOFF='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
+
+if(VU()&&VU().token)location.replace('courses');
+$('#bk').href=MAIN_VIBE;
+$$('[data-eye]').forEach(b=>{b.innerHTML=EYE;b.onclick=()=>{const i=$('#'+b.dataset.eye),s=i.type==='password';i.type=s?'text':'password';b.innerHTML=s?EYEOFF:EYE}});
+function mode(m){const l=m==='login';$('#vS').hidden=l;$('#vL').hidden=!l;$('#tS').classList.toggle('on',!l);$('#tL').classList.toggle('on',l);$('#ok').hidden=true;
+ $('#sw').innerHTML=l?'ليس لديك حساب؟ <a href="#signup">أنشئ حسابًا</a>':'لديك حساب؟ <a href="#login">سجّل دخولك</a>';
+ if(CF)(l?cfShow('l','#cfl'):cfShow('s','#cfs'))}
+$('#tS').onclick=()=>{location.hash='signup'};$('#tL').onclick=()=>{location.hash='login'};
+const route=()=>mode(location.hash==='#login'?'login':'signup');
+addEventListener('hashchange',route);route();
+if(CF){const sc=document.createElement('script');sc.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=cfReady';sc.async=true;document.head.appendChild(sc);window.cfReady=()=>route()}
+const okMail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+const fail=(el,t)=>{el.textContent=t;const c=$('#card');c.classList.remove('sh');void c.offsetWidth;c.classList.add('sh')};
+async function act(btn,er,fn){er.textContent='';btn.disabled=true;try{await fn()}catch(e){fail(er,vmsg(e))}finally{btn.disabled=false}}
+const enter=async(j,name)=>{const nm=await ensureMember(j,name);setVU({id:j.user.id,name:nm,email:j.user.email,token:j.access_token,refresh:j.refresh_token});location.replace('courses')};
+$('#fS').addEventListener('submit',e=>{e.preventDefault();const name=$('#sn').value.trim(),email=$('#se').value.trim().toLowerCase(),pw=$('#sp').value,er=$('#eS');
+ if(name.length<2)return fail(er,'اكتب اسمك (حرفين على الأقل).');
+ if(!okMail(email))return fail(er,'اكتب إيميل صحيح.');
+ if(/@academy-users\.com$/i.test(email))return fail(er,'استخدم إيميلك الشخصي.');
+ if(pw.length<8)return fail(er,'كلمة السر لازم تكون 8 أحرف على الأقل.');
+ act($('#bS'),er,async()=>{const j=await vauth('/auth/v1/signup',{email,password:pw,data:{name,vibe:true}},'s');
+  if(j.access_token&&j.user)return enter(j,name);
+  $('#vS').hidden=true;const ok=$('#ok');ok.hidden=false;ok.textContent='تم إنشاء الحساب. افتح بريدك ('+email+') واضغط على رابط التأكيد، بعدها سجّل دخولك من هنا.';
+  $('#sw').innerHTML='<a href="#login">تسجيل الدخول</a>'})});
+$('#fL').addEventListener('submit',e=>{e.preventDefault();const email=$('#le').value.trim().toLowerCase(),pw=$('#lp').value,er=$('#eL');
+ if(!okMail(email)||!pw)return fail(er,'اكتب الإيميل وكلمة السر.');
+ act($('#bL'),er,async()=>{const j=await vauth('/auth/v1/token?grant_type=password',{email,password:pw},'l');
+  await enter(j,(j.user.user_metadata&&j.user.user_metadata.name)||email.split('@')[0])})});
+</script></body></html>
