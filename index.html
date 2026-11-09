@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لينكات نَسَق</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--ink:#1b2540;--mut:#6b7794;--ac:#2563c9;--bd:#e2e8f3}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1524;--card:#17203a;--ink:#e8edf9;--mut:#93a0c0;--ac:#6ea0ff;--bd:#27345a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Segoe UI",Tahoma,sans-serif;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+h1{display:flex;align-items:center;gap:10px;font-size:1.6rem;margin:0 0 4px}
+h1 img{width:34px;height:34px}
+p.sub{color:var(--mut);margin:0 0 20px}
+.box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--ink);font:inherit}
+.stats{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
+.stat{flex:1;min-width:120px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 14px}
+.stat b{display:block;font-size:1.4rem}
+.stat span{color:var(--mut);font-size:.85rem}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--bd)}
+.row:first-child{border-top:0}
+.row img,.row .ph{width:48px;height:48px;border-radius:10px;object-fit:cover;background:var(--bd);flex:none}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t small{color:var(--mut);direction:ltr;display:inline-block}
+.tag{font-size:.75rem;border:1px solid var(--bd);border-radius:20px;padding:1px 8px;color:var(--mut)}
+button{font:inherit;cursor:pointer;border:0;border-radius:9px;background:var(--ac);color:#fff;padding:7px 14px}
+button.ok{background:#1f9d62}
+.empty{color:var(--mut);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><img src="/assets/favicon.svg" alt="">لينكات نَسَق</h1>
+  <p class="sub">كل منتج أو متجر جديد بيتعمله لينك مشاركة تلقائي هنا. اللينك ده هو اللي بيتبعت لما حد يضغط «شارك».</p>
+  <div class="stats">
+    <div class="stat"><b id="s-all">–</b><span>إجمالي اللينكات</span></div>
+    <div class="stat"><b id="s-clicks">–</b><span>إجمالي الضغطات</span></div>
+  </div>
+  <div class="box">
+    <input id="q" type="search" placeholder="ابحث باسم المنتج أو المتجر أو الكود…" aria-label="بحث">
+    <div id="list"><p class="empty">جارٍ التحميل…</p></div>
+  </div>
+</div>
+<script>
+const SB='https://dbzqejwsivgndftfnezb.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRienFlandzaXZnbmRmdGZuZXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5ODUwMzAsImV4cCI6MjEwNTU2MTAzMH0.QCY4799Pg_caHK5c0WmKat-Q78uiF3PT19IxAlFBuW4';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let rows=[];
+function draw(){
+  const q=$('#q').value.trim().toLowerCase();
+  const f=rows.filter(r=>!q||(r.title||'').toLowerCase().includes(q)||r.code.includes(q));
+  $('#list').innerHTML=f.length?f.map(r=>{
+    const url=location.origin+'/'+r.code;
+    return '<div class="row">'+(r.image_url&&/^https?:/.test(r.image_url)?'<img src="'+esc(r.image_url)+'" alt="" loading="lazy">':'<span class="ph"></span>')+
+      '<div class="t"><b>'+esc(r.title||'(بدون اسم)')+'</b><small>'+esc(url)+'</small></div>'+
+      '<span class="tag">'+(r.kind==='store'?'متجر':'منتج')+'</span><span class="tag">'+Number(r.clicks||0)+' ضغطة</span>'+
+      '<button data-u="'+esc(url)+'">نسخ</button></div>';
+  }).join(''):'<p class="empty">مفيش نتائج.</p>';
+}
+$('#q').addEventListener('input',draw);
+$('#list').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-u]');if(!b)return;
+  try{await navigator.clipboard.writeText(b.dataset.u);b.textContent='تم ✓';b.classList.add('ok');setTimeout(()=>{b.textContent='نسخ';b.classList.remove('ok')},1500)}catch(_){prompt('انسخ اللينك:',b.dataset.u)}
+});
+fetch(SB+'/rest/v1/share_links?select=code,kind,title,image_url,clicks,created_at&order=created_at.desc&limit=500',{headers:{apikey:KEY,Authorization:'Bearer '+KEY}})
+  .then(r=>r.json()).then(j=>{rows=Array.isArray(j)?j:[];$('#s-all').textContent=rows.length;$('#s-clicks').textContent=rows.reduce((a,r)=>a+Number(r.clicks||0),0);draw()})
+  .catch(()=>{$('#list').innerHTML='<p class="empty">تعذّر تحميل اللينكات.</p>'});
+</script>
+</body>
+</html>
