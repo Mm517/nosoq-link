@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صفحة المدرسين | مجتمع الفايب كودينج</title><meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#0A1730">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="plat.css"></head>
+<body class="plt" data-p="teachers"><main id="pg"><div class="sk" style="height:46px;width:240px;margin-bottom:20px"></div><div class="cg"><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div><div class="sk" style="height:220px"></div></div></main>
+<script src="config.js"></script><script src="vibe.js"></script><script src="shell.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+run(async()=>{
+const TABS=[['sys','النظام'],['cur','المنهج'],['api','الـ APIs'],['roles','الأدوار'],['plan','وقت الشرح'],['ai','المساعد الذكي'],['tc','شات المدرسين']];
+let D={stage:[],api:[],role:[],session:[]},TS=[],T='sys';
+const tname=id=>(TS.find(t=>t.user_id===id)||{}).name||'';
+const hm=d=>new Date(d).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'});
+const end=s=>new Date(+new Date(s.starts_at)+(s.duration_min||0)*6e4);
+
+async function boot(){
+ $('#pg').innerHTML=pgHead('صفحة المدرسين','النظام اللي هننشر عليه، الـ APIs، دور كل مدرّس، ومواعيد الشرح — ومعاك مساعد ذكي وشات للمدرسين.')+SK(1,160);
+ try{const [its,ts]=await Promise.all([vget('aa_vc_teach_items?select=*&order=sort,id'),vget('aa_vc_teachers?select=user_id,name,title,active&active=eq.true&order=created_at')]);
+  D={stage:[],api:[],role:[],session:[]};its.forEach(i=>D[i.kind]&&D[i.kind].push(i));D.session.sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));TS=ts}
+ catch(_){$('#pg').innerHTML=pgHead('صفحة المدرسين')+'<div class="empty">تعذّر تحميل البيانات.</div>';return}
+ $('#pg').innerHTML=pgHead('صفحة المدرسين','النظام اللي هننشر عليه، الـ APIs، دور كل مدرّس، ومواعيد الشرح — ومعاك مساعد ذكي وشات للمدرسين.',ADM?'<a class="btn btn-o btn-s" href="admin-teachers">إدارة المدرسين</a>':'')+
+  `<nav class="tp-tabs" id="tt">${TABS.map(([k,t])=>`<a href="#${k}" data-t="${k}">${t}</a>`).join('')}</nav><div id="tb"></div>`;
+ window.addEventListener('hashchange',()=>go(location.hash.slice(1)));go(location.hash.slice(1))}
+
+function go(k){T=TABS.some(x=>x[0]===k)?k:'sys';$$('#tt a').forEach(a=>a.classList.toggle('on',a.dataset.t===T));
+ ({sys:vSys,cur:vCur,api:vApi,roles:vRoles,plan:vPlan,ai:vAi,tc:vTc})[T]()}
+const emp=t=>`<div class="empty">${t}<br><small>الأدمن بيضيفها من لوحة الإدارة ← المدرسين.</small></div>`;
+
+function vSys(){$('#tb').innerHTML=D.stage.length?`<div class="tp-flow">${D.stage.map((s,i)=>`<div class="tp-st"><div class="tp-n">${nf.format(i+1)}</div><div class="card"><h3>${esc(s.title)}</h3><p>${esc(s.body)}</p>${s.link?`<span class="tp-ep">${esc(s.link)}</span>`:''}</div></div>`).join('')}</div>`:emp('لسه مفيش مراحل للنظام.')}
+
+function vApi(){$('#tb').innerHTML=D.api.length?`<div class="tp-g">${D.api.map(a=>`<div class="card"><h3>${esc(a.title)}</h3>${a.link?`<span class="tp-ep">${esc(a.link)}</span>`:''}<p><b>دوره:</b> ${esc(a.body)}</p></div>`).join('')}</div>`:emp('لسه مفيش APIs متسجّلة.')}
+
+function vRoles(){const bt={};D.role.forEach(r=>(bt[r.teacher_id||'-']=bt[r.teacher_id||'-']||[]).push(r));
+ const cards=TS.map(t=>{const rs=bt[t.user_id]||[],ss=D.session.filter(s=>s.teacher_id===t.user_id),mins=ss.reduce((a,s)=>a+(s.duration_min||0),0);
+  return `<div class="card"><div style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><span class="av">${esc((t.name||'؟')[0])}</span><div><h3 style="line-height:1.4">${esc(t.name)}${t.user_id===ME_ID?' <span class="chip">إنت</span>':''}</h3><small class="muted">${esc(t.title||'مدرّس')}</small></div></div>
+  ${rs.map(r=>`<p style="margin:6px 0"><b>${esc(r.title)}</b><br>${esc(r.body)}</p>`).join('')||'<p class="muted" style="font-size:13.5px">لسه مفيش دور متسجّل.</p>'}
+  <div style="margin-top:8px"><span class="chip">${nf.format(ss.length)} جلسة</span> <span class="chip g">${nf.format(mins)} دقيقة شرح</span></div></div>`}).join('');
+ const gen=(bt['-']||[]).map(r=>`<div class="card"><h3>${esc(r.title)}</h3><p>${esc(r.body)}</p></div>`).join('');
+ $('#tb').innerHTML=(cards||gen)?`<div class="tp-g">${cards}${gen}</div>`:emp('لسه مفيش أدوار.')}
+
+function vPlan(){const now=Date.now(),up=D.session.find(s=>+new Date(s.starts_at)>now);
+ const rel=s=>{const m=Math.round((+new Date(s.starts_at)-now)/6e4);return m<60?'بعد '+nf.format(m)+' دقيقة':m<1440?'بعد '+nf.format(Math.floor(m/60))+' ساعة'+(m%60?' و'+nf.format(m%60)+' دقيقة':''):'بعد '+nf.format(Math.round(m/1440))+' يوم'};
+ const days={};D.session.forEach(s=>{const k=new Date(s.starts_at).toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'});(days[k]=days[k]||[]).push(s)});
+ $('#tb').innerHTML=(up?`<div class="tp-next"><span class="av">⏱</span><div><small>الجلسة الجاية</small><b>${esc(up.title)}</b> · ${esc(tname(up.teacher_id)||'—')}</div><div style="margin-inline-start:auto;text-align:end"><small>${fdt(up.starts_at)}</small><b>${rel(up)}</b></div></div>`:'')+
+ (D.session.length?Object.entries(days).map(([d,ss])=>`<div class="tp-day">${d}</div><div class="stack" style="display:flex;flex-direction:column;gap:10px">${ss.map(s=>{const st=now<+new Date(s.starts_at)?['قادم','y']:now<+end(s)?['جاري الآن','r']:['انتهى','g'];
+  return `<div class="card tp-se ${s.teacher_id===ME_ID?'me':''}"><div class="tp-tm">${hm(s.starts_at)}<small>→ ${hm(end(s))}</small></div><div><b>${esc(s.title)}</b>${s.body?`<p class="muted" style="font-size:13.5px;white-space:pre-wrap">${esc(s.body)}</p>`:''}<span class="muted" style="font-size:13px;display:block">${esc(tname(s.teacher_id)||'غير محدد')}${s.teacher_id===ME_ID?' (جلستك)':''} · ${nf.format(s.duration_min||0)} دقيقة</span></div><span class="chip ${st[1]}">${st[0]}</span></div>`}).join('')}</div>`).join(''):emp('لسه مفيش مواعيد شرح.'))}
+
+/* ===== المنهج: أقسام ومحاور قابلة للتعديل من أي مدرّس ===== */
+let CU={secs:[],tops:[]},CUF={t:'all',s:'all'},CUI=false;const CUO=new Set();
+const STL={todo:'لسه',doing:'قيد التجهيز',ready:'جاهز'};
+const byS=id=>CU.tops.filter(t=>t.section_id===id).sort((a,b)=>a.sort-b.sort||a.id-b.id);
+const secS=()=>CU.secs.slice().sort((a,b)=>a.sort-b.sort||a.id-b.id);
+function saved(){const e=$('#cuSv');if(!e)return;e.textContent='اتحفظ ✓';e.style.opacity=1;clearTimeout(saved.t);saved.t=setTimeout(()=>{e.style.opacity=0},1800)}
+async function vCur(){const tb=$('#tb');tb.innerHTML=SK(1,220);
+ try{const [s,t]=await Promise.all([vget('aa_vc_cur_sections?select=*&order=sort,id'),vget('aa_vc_cur_topics?select=*&order=sort,id')]);CU.secs=s;CU.tops=t}
+ catch(_){tb.innerHTML='<div class="empty">تعذّر تحميل المنهج.</div>';return}
+ if(!CUI){CUI=true;curEvents(tb)}if(!CUO.size&&CU.secs.length)CUO.add(secS()[0].id);curDraw()}
+const curVis=t=>(CUF.s==='all'||t.status===CUF.s)&&(CUF.t==='all'||(CUF.t==='me'?t.teacher_id===ME_ID:CUF.t==='none'?!t.teacher_id:t.teacher_id===CUF.t));
+function topicRow(t,i,n){const rows=Math.max(1,Math.ceil(t.title.length/52));
+ return `<div class="cu-t" data-tid="${t.id}"><div class="cu-r1"><select class="cu-st s-${t.status}" data-f="status" aria-label="الحالة">${Object.entries(STL).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}</select><textarea data-f="title" rows="${rows}" maxlength="400" aria-label="المحور">${esc(t.title)}</textarea></div>
+ <div class="cu-r2"><select data-f="teacher_id" aria-label="المدرّس المسؤول"><option value="">— غير مسند —</option>${TS.map(x=>`<option value="${x.user_id}" ${t.teacher_id===x.user_id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>${TS.some(x=>x.user_id===ME_ID)&&t.teacher_id!==ME_ID?'<button class="cu-ic" data-claim>أنا هشرحه</button>':''}
+ <input type="number" min="1" max="600" data-f="duration_min" placeholder="دقيقة" value="${t.duration_min||''}" aria-label="مدة الشرح بالدقايق">
+ <button class="cu-ic" data-nt>📝 ملاحظات${t.notes?' •':''}</button><button class="cu-ic" data-up ${i===0?'disabled':''} aria-label="فوق">↑</button><button class="cu-ic" data-dn ${i===n-1?'disabled':''} aria-label="تحت">↓</button><button class="cu-ic r" data-del>حذف</button></div>
+ <textarea class="cu-nt" data-f="notes" rows="3" maxlength="4000" placeholder="ملاحظات / روابط / نقاط الشرح" ${t.notes?'':'hidden'}>${esc(t.notes)}</textarea></div>`}
+function curDraw(){const y=window.scrollY,secs=secS(),all=CU.tops,done=all.filter(t=>t.status==='ready').length,asg=all.filter(t=>t.teacher_id).length,mins=all.reduce((a,t)=>a+(t.duration_min||0),0),filt=CUF.t!=='all'||CUF.s!=='all';
+ const load=TS.map(x=>[x.name,all.filter(t=>t.teacher_id===x.user_id).length]);
+ $('#tb').innerHTML=`<div class="cu-sum"><div class="card"><b>${nf.format(all.length)}</b><small>محور في ${nf.format(secs.length)} قسم</small></div><div class="card"><b>${nf.format(asg)}</b><small>مسندة لمدرّس (${nf.format(all.length-asg)} لسه)</small></div><div class="card"><b>${all.length?nf.format(Math.round(done/all.length*100)):'٠'}٪</b><small>جاهزة (${nf.format(done)})</small></div><div class="card"><b id="cuMin">${nf.format(mins)}</b><small>دقيقة شرح (~${nf.format(Math.round(mins/60*10)/10)} ساعة)</small></div></div>
+ <div class="cu-load">${load.map(([n,c])=>`<span class="chip ${c?'':'y'}">${esc(n)} · ${nf.format(c)} محور</span>`).join('')}</div>
+ <div class="cu-bar"><select id="cuT" aria-label="فلتر المدرّس"><option value="all">كل المدرسين</option><option value="me" ${CUF.t==='me'?'selected':''}>محاوري أنا</option><option value="none" ${CUF.t==='none'?'selected':''}>غير مسندة</option>${TS.map(x=>`<option value="${x.user_id}" ${CUF.t===x.user_id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+  <select id="cuS" aria-label="فلتر الحالة"><option value="all">كل الحالات</option>${Object.entries(STL).map(([k,v])=>`<option value="${k}" ${CUF.s===k?'selected':''}>${v}</option>`).join('')}</select>
+  <button class="btn btn-o btn-s" id="cuAll">فتح / طي الكل</button><button class="btn btn-o btn-s" id="cuCopy">نسخ المنهج كنص</button><button class="btn btn-p btn-s" id="cuAddS">+ قسم جديد</button><span id="cuSv" role="status"></span></div>
+ ${secs.map((s,si)=>{const ts=byS(s.id),vt=ts.filter(curVis);if(filt&&ts.length&&!vt.length)return '';const dn=ts.filter(t=>t.status==='ready').length,pc=ts.length?Math.round(dn/ts.length*100):0;
+  return `<details class="cu-sec card" data-sid="${s.id}" ${CUO.has(s.id)?'open':''}><summary><span class="tp-n cu-n">${nf.format(si+1)}</span><span class="cu-ti"><b>${esc(s.title)}</b><small class="muted">${nf.format(ts.length)} محاور · ${nf.format(dn)} جاهز</small></span><span class="cu-pb" title="${nf.format(pc)}٪"><div class="bar"><i style="width:${pc}%"></i></div></span></summary>
+  <div class="cu-body"><div class="cu-sh"><input data-sf="title" value="${esc(s.title)}" maxlength="160" aria-label="اسم القسم"><input data-sf="outcome" value="${esc(s.outcome)}" maxlength="400" placeholder="بعد القسم ده: الطالب هيبقى..." aria-label="نتيجة القسم"></div>
+  ${vt.map(t=>topicRow(t,ts.indexOf(t),ts.length)).join('')||'<p class="muted">مفيش محاور هنا.</p>'}
+  <form class="cu-add" data-addf="${s.id}"><input maxlength="400" placeholder="أضف محور جديد واضغط Enter..." aria-label="محور جديد"><button class="btn btn-o btn-s">إضافة</button></form>
+  <div class="cu-ft"><button class="cu-ic" data-sup ${si===0?'disabled':''}>↑ قدّم القسم</button><button class="cu-ic" data-sdn ${si===secs.length-1?'disabled':''}>↓ أخّر القسم</button><button class="cu-ic r" data-sdel>حذف القسم</button></div></div></details>`}).join('')||'<div class="empty">لسه مفيش أقسام. اضغط "+ قسم جديد".</div>'}`;
+ $$('.cu-r1 textarea').forEach(t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px'});window.scrollTo(0,y)}
+async function curPatch(k,id,o){const r=(k==='s'?CU.secs:CU.tops).find(x=>x.id==id);if(!r)return false;const old={};for(const f in o)old[f]=r[f];Object.assign(r,o);
+ try{await vpatch('aa_vc_cur_'+(k==='s'?'sections':'topics')+'?id=eq.'+id,o);saved();return true}catch(e){Object.assign(r,old);toast(em(e),true);curDraw();return false}}
+async function curMove(k,list,i,d){const j=i+d;if(j<0||j>=list.length)return;const l=list.slice();[l[i],l[j]]=[l[j],l[i]];const ch=[];l.forEach((x,n)=>{if(x.sort!==n+1){x.sort=n+1;ch.push(x)}});
+ try{await Promise.all(ch.map(x=>vpatch('aa_vc_cur_'+(k==='s'?'sections':'topics')+'?id=eq.'+x.id,{sort:x.sort})));saved()}catch(e){toast(em(e),true);return vCur()}curDraw()}
+function curEvents(tb){
+ tb.addEventListener('toggle',e=>{const d=e.target.closest&&e.target.closest('.cu-sec');if(d&&e.target===d)d.open?CUO.add(+d.dataset.sid):CUO.delete(+d.dataset.sid)},true);
+ tb.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('.cu-r1 textarea')){e.preventDefault();e.target.blur()}});
+ tb.addEventListener('input',e=>{if(e.target.matches('.cu-r1 textarea')){e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px'}});
+ tb.addEventListener('change',async e=>{const el=e.target;
+  if(el.id==='cuT'){CUF.t=el.value;return curDraw()}if(el.id==='cuS'){CUF.s=el.value;return curDraw()}
+  const r=el.closest('.cu-t'),f=el.dataset.f;
+  if(r&&f){const id=+r.dataset.tid;let v=el.value;
+   if(f==='title'){v=v.trim();if(!v)return curDraw()}
+   if(f==='duration_min'){v=v===''?null:Math.min(600,Math.max(1,Math.round(+v)||1))}
+   if(f==='teacher_id')v=v||null;
+   const ok=await curPatch('t',id,{[f]:v});
+   if(ok&&(f==='status'||f==='teacher_id'))curDraw();
+   if(ok&&f==='duration_min'){const m=$('#cuMin');if(m)m.textContent=nf.format(CU.tops.reduce((a,t)=>a+(t.duration_min||0),0))}return}
+  if(el.dataset.sf){const sid=+el.closest('.cu-sec').dataset.sid;let v=el.value.trim();if(el.dataset.sf==='title'&&!v)return curDraw();
+   const ok=await curPatch('s',sid,{[el.dataset.sf]:v});if(ok&&el.dataset.sf==='title'){const b=el.closest('.cu-sec').querySelector('summary .cu-ti b');if(b)b.textContent=v}}});
+ tb.addEventListener('submit',e=>{const f=e.target.closest('[data-addf]');if(!f)return;e.preventDefault();const i=f.querySelector('input'),v=i.value.trim(),sid=+f.dataset.addf;if(!v)return;
+  guard(async()=>{const l=byS(sid),r=await vpost('aa_vc_cur_topics',{section_id:sid,title:v,sort:(l.length?Math.max(...l.map(x=>x.sort)):0)+1});CU.tops.push(r[0]);CUO.add(sid);curDraw();saved()})});
+ tb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const r=b.closest('.cu-t'),sec=b.closest('.cu-sec'),tid=r&&+r.dataset.tid,sid=sec&&+sec.dataset.sid;
+  if(b.id==='cuAll'){const open=!CU.secs.every(s=>CUO.has(s.id));CU.secs.forEach(s=>open?CUO.add(s.id):CUO.delete(s.id));return curDraw()}
+  if(b.id==='cuCopy'){const txt=secS().map((s,i)=>`## ${i+1}. ${s.title}\n${s.outcome?'بعد القسم ده: '+s.outcome+'\n':''}`+byS(s.id).map(t=>`- ${t.title}${t.teacher_id?' — '+tname(t.teacher_id):''} [${STL[t.status]}${t.duration_min?' · '+t.duration_min+' د':''}]`).join('\n')).join('\n\n');
+   return (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('تم نسخ المنهج'),()=>toast('المتصفح منع النسخ',true))}
+  if(b.id==='cuAddS')return guard(async()=>{const r=await vpost('aa_vc_cur_sections',{title:'قسم جديد',sort:(CU.secs.length?Math.max(...CU.secs.map(x=>x.sort)):0)+1});CU.secs.push(r[0]);CUO.add(r[0].id);curDraw();saved()});
+  if(b.hasAttribute('data-nt')){const n=r.querySelector('.cu-nt');n.hidden=!n.hidden;if(!n.hidden)n.focus();return}
+  if(b.hasAttribute('data-claim'))return curPatch('t',tid,{teacher_id:ME_ID}).then(ok=>ok&&curDraw());
+  if(b.hasAttribute('data-up')||b.hasAttribute('data-dn')){const l=byS(sid),i=l.findIndex(x=>x.id===tid);return curMove('t',l,i,b.hasAttribute('data-up')?-1:1)}
+  if(b.hasAttribute('data-del')){if(!confirm('تحذف المحور ده؟'))return;return guard(async()=>{await vdel('aa_vc_cur_topics?id=eq.'+tid);CU.tops=CU.tops.filter(x=>x.id!==tid);curDraw();saved()})}
+  if(b.hasAttribute('data-sup')||b.hasAttribute('data-sdn')){const l=secS(),i=l.findIndex(x=>x.id===sid);return curMove('s',l,i,b.hasAttribute('data-sup')?-1:1)}
+  if(b.hasAttribute('data-sdel')){const n=byS(sid).length;if(!confirm('تحذف القسم'+(n?' و'+n+' محور فيه':'')+'؟ مش هتقدر ترجّعهم.'))return;return guard(async()=>{await vdel('aa_vc_cur_sections?id=eq.'+sid);CU.secs=CU.secs.filter(x=>x.id!==sid);CU.tops=CU.tops.filter(x=>x.section_id!==sid);curDraw();saved()})}})}
+
+/* ===== المساعد الذكي (Gemini عبر Edge Function) ===== */
+const AI=[];let AIB=false;
+function md(t){let h=esc(t);const cb=[];h=h.replace(/```[\w-]*\n?([\s\S]*?)```/g,(_,c)=>{cb.push(c.replace(/\n$/,''));return '\u0000'+(cb.length-1)+'\u0000'});
+ h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+ h=h.split(/\n{2,}/).map(p=>{const ls=p.split('\n');return ls.every(l=>/^\s*[-*•]\s+/.test(l))?'<ul>'+ls.map(l=>'<li>'+l.replace(/^\s*[-*•]\s+/,'')+'</li>').join('')+'</ul>':'<p>'+ls.join('<br>')+'</p>'}).join('');
+ return h.replace(/\u0000(\d+)\u0000/g,(_,i)=>'<pre><code>'+cb[i]+'</code></pre>').replace(/<p>(<pre>[\s\S]*?<\/pre>)<\/p>/g,'$1')}
+const AIE={daily_limit:'وصلت للحد اليومي للمساعد، جرّب بكرة.',busy:'المساعد مشغول حاليًا، جرّب بعد شوية.',forbidden:'المساعد متاح للمدرسين بس.',not_configured:'المساعد لسه مش متفعّل.',unauthorized:'سجّل دخولك تاني.'};
+async function askAI(){const go=()=>fetch(SUPA_URL+'/functions/v1/teacher-ai',{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPA_KEY,Authorization:'Bearer '+VU().token},body:JSON.stringify({messages:AI.slice(-12).map(m=>({role:m.role,text:m.text}))})});
+ let r=await go();if(r.status===401&&await vrefresh())r=await go();const j=await r.json().catch(()=>({}));if(!r.ok||!j.text)throw new Error(j.error||'x');return j.text}
+function aiDraw(){const l=$('#aiL');if(!l)return;l.innerHTML=(AI.length?AI.map(m=>`<div class="tp-m ${m.role==='user'?'u':''}">${m.role==='user'?'<p>'+esc(m.text).replace(/\n/g,'<br>')+'</p>':md(m.text)}</div>`).join(''):`<div class="tp-m">${'أهلًا يا '+esc(((ME.name||'').split(' ')[0])||'مدرّس')+' 👋<br>أنا مساعدك الذكي. أعرف خطة النظام والـ APIs والأدوار والمواعيد الحالية، وأقدر أساعدك تحضّر الشرح وتبسّط أي مفهوم أو تحل مشكلة كود.'}</div>`)+(AIB?'<div class="tp-m"><span class="tp-dots"><i></i><i></i><i></i></span></div>':'');l.scrollTop=l.scrollHeight}
+function vAi(){$('#tb').innerHTML=`<div class="tp-ai"><div class="tp-ml" id="aiL" aria-live="polite"></div><div class="tp-sg" id="aiS">${['لخّص لي دوري وجلساتي','إيه ميعاد جلستي الجاية؟','إيه المحاور اللي لسه مفيش مدرّس مسؤول عنها؟','ازاي أشرح الـ RLS ببساطة للطلاب؟','اقترح نقاط لتحضير شرح الـ Edge Functions'].map(q=>`<button type="button">${q}</button>`).join('')}</div><form class="ch-c" id="aiF"><input id="aiI" maxlength="1500" placeholder="اسأل المساعد..." autocomplete="off" enterkeyhint="send"><button class="btn btn-p">إرسال</button></form></div>`;
+ aiDraw();const send=async q=>{q=q.trim();if(!q||AIB)return;AI.push({role:'user',text:q});AIB=true;aiDraw();$('#aiI').value='';
+  try{AI.push({role:'model',text:await askAI()})}catch(e){AI.push({role:'model',text:'⚠️ '+(AIE[e.message]||'حصل خطأ، جرّب تاني.')});}
+  AIB=false;aiDraw();const i=$('#aiI');if(i)i.focus()};
+ $('#aiF').onsubmit=e=>{e.preventDefault();send($('#aiI').value)};$('#aiS').onclick=e=>{const b=e.target.closest('button');if(b)send(b.textContent)}}
+
+/* ===== شات المدرسين (Realtime) ===== */
+const CH=new Map();let RT=false,RTOK=false,CHL=false;
+function tcDraw(stick){const l=$('#tcL');if(!l)return;const near=stick||l.scrollHeight-l.scrollTop-l.clientHeight<120,ms=[...CH.values()].sort((a,b)=>a.id-b.id);
+ l.innerHTML=ms.length?ms.map(m=>{const me=m.user_id===ME_ID;return `<div class="ms ${me?'me':''}"><small>${esc(m.name)}<span>${hm(m.created_at)}</span></small><p>${esc(m.body)}</p>${me||ADM?`<div class="ac"><button data-dm="${m.id}">حذف</button></div>`:''}</div>`}).join(''):'<div class="empty">ابدأ المحادثة مع زمايلك المدرسين 👋</div>';if(near)l.scrollTop=l.scrollHeight}
+function tcAdd(m,stick){if(CH.has(m.id)&&!stick)return;CH.set(m.id,m);tcDraw(stick)}
+async function vTc(){$('#tb').innerHTML=`<div class="ch"><div class="ch-h"><span>شات المدرسين</span><small class="muted">للمدرسين والأدمن بس</small></div><div class="ch-l" id="tcL" aria-live="polite"><div class="sk" style="height:40px;width:60%"></div></div><form class="ch-c" id="tcF"><input id="tcI" maxlength="1000" placeholder="اكتب رسالتك..." autocomplete="off" enterkeyhint="send"><button class="btn btn-p">إرسال</button></form></div>`;
+ $('#tcF').onsubmit=e=>{e.preventDefault();const i=$('#tcI'),b=i.value.trim();if(!b)return;i.value='';guard(async()=>{const r=await vpost('aa_vc_tmsgs',{body:b});tcAdd(r[0],true)}).then(()=>i.focus())};
+ $('#tcL').onclick=e=>{const a=e.target.closest('[data-dm]');if(!a)return;guard(async()=>{const id=+a.dataset.dm;await vdel('aa_vc_tmsgs?id=eq.'+id);CH.delete(id);tcDraw()})};
+ if(!CHL){try{(await vget('aa_vc_tmsgs?select=*&order=id.desc&limit=80')).reverse().forEach(m=>CH.set(m.id,m));CHL=true}catch(_){$('#tcL').innerHTML='<div class="empty">تعذّر تحميل الشات.</div>';return}}
+ tcDraw(true);rtStart()}
+function rtStart(){if(RT)return;RT=true;try{const SB=window._VSB=window._VSB||supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},realtime:{params:{eventsPerSecond:10}}});
+ SB.realtime.setAuth(VU().token);
+ SB.channel('vc-t-'+ME_ID).on('postgres_changes',{event:'*',schema:'public',table:'aa_vc_tmsgs'},p=>{if(p.eventType==='DELETE'){CH.delete(p.old.id);tcDraw()}else tcAdd(p.new)}).subscribe(s=>{RTOK=s==='SUBSCRIBED'});
+ setInterval(async()=>{await vrefresh();try{SB.realtime.setAuth(VU().token)}catch(_){}},20*60*1000)}catch(_){}}
+setInterval(async()=>{if(!CHL||RTOK||document.hidden||T!=='tc')return;try{const last=Math.max(0,...CH.keys());(await vget('aa_vc_tmsgs?select=*&id=gt.'+last+'&order=id')).forEach(m=>tcAdd(m))}catch(_){}},6000);
+
+await boot()},{teacher:true});
+</script></body></html>
